@@ -1,4 +1,4 @@
-# Sunflower: A Two-Axis Solar Tracker
+![Sunflower, a Two-Axis Solar Tracker. Built from the gear teeth to the control law.](assets/banner.svg)
 
 > **A two-axis solar tracker built from scratch: printed body and gearbox, custom electronics, and a closed-loop gradient-ascent controller that follows the light without a fixed setpoint. Built almost entirely from parts already in storage.**
 
