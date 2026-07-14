@@ -1,0 +1,20 @@
+# CAD exchange files
+*.step
+*.STEP
+
+# LaTeX build artefacts
+*.aux
+*.log
+*.blg
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Build output
+build/
+
+# assistant scratch
+CLAUDE.md
+AGENTS.md
+.claude/
