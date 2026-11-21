@@ -1,6 +1,11 @@
 ![Sunflower, a Two-Axis Solar Tracker. Built from the gear teeth to the control law.](assets/banner.svg)
 
-> **A two-axis solar tracker built from scratch: printed body and gearbox, custom electronics, and a closed-loop gradient-ascent controller that follows the light without a fixed setpoint. Built almost entirely from parts already in storage.**
+Turns a set of solar panels towards the brightest light on two axes, with a printed gearbox and a controller that needs no setpoint.
+
+| Result | Value |
+| --- | --- |
+| Tracking, from two starting orientations | finds the brighter direction and stops when the reading drops, on both axes |
+| Sensor noise after the 8-sample moving average | about plus or minus 1 ADC count |
 
 [![Arduino](https://img.shields.io/badge/Arduino-00979D?style=flat&logo=arduino&logoColor=white)](https://www.arduino.cc/)
 [![C++](https://img.shields.io/badge/C%2B%2B-00599C?style=flat&logo=cplusplus&logoColor=white)](https://isocpp.org/)
@@ -15,6 +20,12 @@
 ![The completed Sunflower robot, connected to the modified power supply](assets/final-build.png)
 
 *The completed Sunflower robot: six panels as petals on a printed pistil, two printed gearboxes, and an L298N-driven pair of 12 V motors on a rotating base.*
+
+## Run it
+
+1. Print `cad/sunflower_robot.stl` in PETG and wire the board as the Wiring table under [Build and run](#build-and-run) shows.
+2. Open `firmware/Sunflower_project_V5.ino` in the Arduino IDE and select the Arduino Nano.
+3. Upload the sketch and power the motors from 12 V. The robot sweeps for the brightest direction on its own.
 
 ## Abstract
 
@@ -129,6 +140,13 @@ The parametric CAD source is not in this repository. The model can be printed as
 
 No charging module was fitted. The panels produce power and nothing stores it.
 
+## Next steps
+
+- Log the ADC reading and the motor commands over serial during one search, and plot the step response of each axis.
+- Reprint the pistil gear, whose worn bore lets the vertical axis slip.
+- Replace the failed programmer module, which froze the firmware.
+- Rewire two opposite panels and bring back the differential sensing scheme. The difference between the two tells the controller which way to turn.
+
 ## Build and run
 
 **Bill of materials**
@@ -143,6 +161,20 @@ No charging module was fitted. The panels produce power and nothing stores it.
 | Reference sensor | Photoresistor, used only for calibration |
 | Body | 3D-printed PETG, shafts recovered from IKEA spare parts |
 | Supply | 12 V, from a modified laptop adapter |
+
+**Wiring**
+
+The pin numbers come from the constants at the top of the firmware.
+
+| Arduino Nano pin | Connected to | What it does |
+| --- | --- | --- |
+| D9 (PWM) | L298N input of the vertical motor | Drives the pistil up |
+| D6 (PWM) | L298N input of the vertical motor | Drives the pistil down |
+| D5 (PWM) | L298N input of the horizontal motor | Turns the flower left |
+| D3 (PWM) | L298N input of the horizontal motor | Turns the flower right |
+| A4 | Four panels in series, through the voltage divider | Luminosity reading for the search |
+
+Each motor direction gets its own PWM pin, so the firmware sets the speed and the direction with one `analogWrite` per move.
 
 **Firmware**
 
