@@ -55,7 +55,7 @@ In this build the constraints of the printer reach down to the controller. Nozzl
 
 **Electronics.** Arduino Nano V3, L298N dual H-bridge, two 12 V DC motors, supply built from a modified laptop adapter. Four panels in series feed one low-pass filter, a divider, and a single ADC pin.
 
-**Control.** A hill-climbing search on filtered luminosity. Each ADC sample enters an 8-sample moving average, which holds residual noise at roughly plus or minus 1 count. The search drives an axis and keeps sampling. A drop of more than 3 counts below the best value seen during that movement is the stop condition, and the axis then backs up towards the best position. Tracking re-triggers whenever the reading falls below 93 % of the running maximum. The search keeps sampling while an axis moves; the start-up pause, the short pauses after each stop and the back-up moves use blocking delays.
+**Control.** A hill-climbing search on filtered luminosity. Each ADC sample enters an 8-sample moving average, which holds residual noise at roughly plus or minus 1 count. The search drives an axis and keeps sampling. A drop of more than 3 counts below the best value seen during that movement is the stop condition, and the axis then backs up towards the best position. Tracking re-triggers whenever the reading falls below 93 % of the running maximum. The start-up pause, the short pauses after each stop and the back-up moves use blocking delays.
 
 The moving average, verbatim from [`firmware/Sunflower_project_V5.ino`](firmware/Sunflower_project_V5.ino):
 
