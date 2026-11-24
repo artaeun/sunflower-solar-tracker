@@ -4,7 +4,7 @@ Turns a set of solar panels towards the brightest light on two axes, with a prin
 
 | Result | Value |
 | --- | --- |
-| Tracking, from two starting orientations | finds the brighter direction and stops when the reading drops, on both axes |
+| Tracking, from two starting orientations | finds the brighter direction and stops when the reading drops; the final sketch runs it on the horizontal axis |
 | Sensor noise after the 8-sample moving average | about plus or minus 1 ADC count |
 
 [![Arduino](https://img.shields.io/badge/Arduino-00979D?style=flat&logo=arduino&logoColor=white)](https://www.arduino.cc/)
@@ -23,7 +23,7 @@ Turns a set of solar panels towards the brightest light on two axes, with a prin
 
 ## Abstract
 
-The objective was a two-axis solar tracker built almost entirely from parts already in storage and from 3D-printed mechanics, able to point an array of small solar panels at the brightest light source in the room. The approach combined a characterisation of the light sensor, a custom high-ratio spur gearbox generated in OpenSCAD with the BOSL2 library, a printed body designed in Autodesk Fusion, and a closed-loop tracking algorithm that climbs the gradient of the measured luminosity and needs no fixed reference. The final build tracks on both axes. It detects the direction of increasing intensity, drives towards it, and stops and backs up as soon as the intensity drops.
+The objective was a two-axis solar tracker built almost entirely from parts already in storage and from 3D-printed mechanics, able to point an array of small solar panels at the brightest light source in the room. The approach combined a characterisation of the light sensor, a custom high-ratio spur gearbox generated in OpenSCAD with the BOSL2 library, a printed body designed in Autodesk Fusion, and a closed-loop hill-climbing search on the measured luminosity, which needs no fixed reference. The final sketch runs the search on the horizontal axis; the vertical-axis routine is in the file, with its call commented out in this version. The search detects the direction of increasing intensity, drives towards it, and stops and backs up as soon as the intensity drops.
 
 ## Problem
 
@@ -55,7 +55,7 @@ In this build the constraints of the printer reach down to the controller. Nozzl
 
 **Electronics.** Arduino Nano V3, L298N dual H-bridge, two 12 V DC motors, supply built from a modified laptop adapter. Four panels in series feed one low-pass filter, a divider, and a single ADC pin.
 
-**Control.** Gradient ascent on filtered luminosity. Each ADC sample enters an 8-sample moving average, which holds residual noise at roughly plus or minus 1 count. The search drives an axis and keeps sampling. A drop of more than 3 counts below the best value seen during that movement is the stop condition, and the axis then backs up towards the best position. Tracking re-triggers whenever the reading falls below 93 % of the running maximum. Every wait in the firmware is a loop that keeps sampling, so the controller never acts on a stale reading.
+**Control.** A hill-climbing search on filtered luminosity. Each ADC sample enters an 8-sample moving average, which holds residual noise at roughly plus or minus 1 count. The search drives an axis and keeps sampling. A drop of more than 3 counts below the best value seen during that movement is the stop condition, and the axis then backs up towards the best position. Tracking re-triggers whenever the reading falls below 93 % of the running maximum. The search keeps sampling while an axis moves; the start-up pause, the short pauses after each stop and the back-up moves use blocking delays.
 
 The moving average, verbatim from [`firmware/Sunflower_project_V5.ino`](firmware/Sunflower_project_V5.ino):
 
@@ -116,7 +116,7 @@ Two failures decided the final design.
 
 **A soldering fault killed the differential sensing scheme.** After the circuit was moved off the breadboard into a permanent soldered build, the panel signals came back scaled or offset, and would not stay consistent between calibration runs. Repeated cycles of acquiring data, fitting a compensation and testing failed to converge. Two additive causes were found. One filter capacitor had been destroyed by heat during soldering, which was invisible through an ADC and a serial plotter and could only be inferred. Under lab illumination far brighter than anything available at home, one panel then visibly charged and discharged like a capacitor, adding a voltage term unrelated to the instantaneous light. Disassembling the robot to rewire the panels would have cost more than the remaining budget, so the two-panel differential scheme was dropped and the four unused panels, already wired in series to the board, were routed through a fresh low-pass filter and divider into an ADC port that had never been used. The result is one aggregated luminosity channel with no directional information.
 
-**PID was rejected on the sensor characterisation, before any of that.** There is no fixed setpoint to regulate against, so the error signal a PID needs does not exist. Gradient ascent needs only a comparison between two consecutive readings, and that comparison is the only reliable output of this sensor.
+**PID was rejected on the sensor characterisation, before any of that.** There is no fixed setpoint to regulate against, so the error signal a PID needs does not exist. A hill-climbing search needs only a comparison between two consecutive readings, and that comparison is the only reliable output of this sensor.
 
 ## Limitations
 
@@ -151,8 +151,8 @@ No charging module was fitted. The panels produce power and nothing stores it.
 
 **Firmware**
 
-- [`firmware/Sunflower_project_V5.ino`](firmware/Sunflower_project_V5.ino) is the sketch that ships on the robot: the moving average, the gradient-ascent search, and the PWM limits for each axis. Open it in the Arduino IDE, select the Nano board, flash it. Motor pins are 9 and 6 for the vertical axis and 5 and 3 for the horizontal axis, into the L298N inputs. The sensor pin is A4.
-- [`firmware/filter_lib.h`](firmware/filter_lib.h) is the digital first-order low-pass that replaced the hardware filter. It discretises the filter by bilinear transform and recomputes its coefficients from the sampling interval measured with `micros()`, so it stays correct even though the loop does not sample at a fixed rate.
+- [`firmware/Sunflower_project_V5.ino`](firmware/Sunflower_project_V5.ino) is the sketch that ships on the robot: the moving average, the hill-climbing search, and the PWM limits for each axis. Open it in the Arduino IDE, select the Nano board, flash it. Motor pins are 9 and 6 for the vertical axis and 5 and 3 for the horizontal axis, into the L298N inputs. The sensor pin is A4.
+- [`firmware/filter_lib.h`](firmware/filter_lib.h) is a public-domain first-order low-pass library by Timon Braun, which I tried as a replacement for the hardware filter. The final sketch does not include it and filters with an 8-sample moving average.
 
 **Printing**
 
